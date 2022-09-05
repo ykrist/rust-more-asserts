@@ -12,6 +12,8 @@ pub enum AssertType {
     Gt,
     Le,
     Ge,
+    Eq,
+    Ne,
     // TODO: `matches`? `contains`?
 }
 
@@ -50,6 +52,8 @@ fn assert_failed_impl(
         AssertType::Gt => ">",
         AssertType::Le => "<=",
         AssertType::Ge => ">=",
+        AssertType::Eq => "=",
+        AssertType::Ne => "!=",
     };
     if let Some(msg) = msg {
         panic!(

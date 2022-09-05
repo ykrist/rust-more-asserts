@@ -29,23 +29,23 @@
 //! # Example
 //!
 //! ```rust
-//! use more_asserts as ma;
+//! use tracing_asserts as ta;
 //!
 //! #[derive(Debug, PartialEq, PartialOrd)]
 //! enum Example { Foo, Bar }
 //!
-//! ma::assert_le!(3, 4);
-//! ma::assert_ge!(
+//! ta::assert_le!(3, 4);
+//! ta::assert_ge!(
 //!     10, 10,
 //!     "You can pass a message too (just like `assert_eq!`)",
 //! );
-//! ma::debug_assert_lt!(
+//! ta::debug_assert_lt!(
 //!     1.3, 4.5,
 //!     "Format syntax is supported ({}).",
 //!     "also like `assert_eq!`"
 //! );
 //!
-//! ma::assert_gt!(
+//! ta::assert_gt!(
 //!     Example::Bar, Example::Foo,
 //!     "It works on anything that implements PartialOrd and Debug!",
 //! );
@@ -93,6 +93,15 @@ pub mod __private {
     }
 }
 
+#[allow(missing_docs)]
+#[doc(hidden)]
+#[macro_export]
+macro_rules! __tracing_error {
+    ($($args:tt)+) => {
+        ::tracing::error!($($args)*)
+    };
+}
+
 /// Panics if the first expression is not strictly less than the second.
 ///
 /// Requires that the values implement [`Debug`](core::fmt::Debug) and
@@ -104,17 +113,18 @@ pub mod __private {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
-/// ma::assert_lt!(3, 4);
-/// ma::assert_lt!(3, 4, "With a message");
-/// ma::assert_lt!(3, 4, "With a formatted message: {}", "oh no");
+/// ta::assert_lt!(3, 4);
+/// ta::assert_lt!(3, 4, "With a message");
+/// ta::assert_lt!(3, 4, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! assert_lt {
     ($left:expr, $right:expr) => {
         match (&$left, &$right) {
             (left, right) => if !(left < right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left < right");
                 $crate::__private::assert_failed_nomsg(
                     left, right, $crate::__private::AssertType::Lt,
                 );
@@ -127,6 +137,7 @@ macro_rules! assert_lt {
     ($left:expr, $right:expr, $($msg_args:tt)+) => {
         match (&$left, &$right) {
             (left, right) => if !(left < right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left < right");
                 $crate::__private::assert_failed_msg(
                     left, right, $crate::__private::AssertType::Lt,
                     $crate::__core::format_args!($($msg_args)+),
@@ -147,17 +158,18 @@ macro_rules! assert_lt {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
-/// ma::assert_gt!(5, 3);
-/// ma::assert_gt!(5, 3, "With a message");
-/// ma::assert_gt!(5, 3, "With a formatted message: {}", "oh no");
+/// ta::assert_gt!(5, 3);
+/// ta::assert_gt!(5, 3, "With a message");
+/// ta::assert_gt!(5, 3, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! assert_gt {
     ($left:expr, $right:expr) => {
         match (&$left, &$right) {
             (left, right) => if !(left > right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left > right");
                 $crate::__private::assert_failed_nomsg(
                     left, right, $crate::__private::AssertType::Gt,
                 );
@@ -170,8 +182,99 @@ macro_rules! assert_gt {
     ($left:expr, $right:expr, $($msg_args:tt)+) => {
         match (&$left, &$right) {
             (left, right) => if !(left > right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left > right");
                 $crate::__private::assert_failed_msg(
                     left, right, $crate::__private::AssertType::Gt,
+                    $crate::__core::format_args!($($msg_args)+),
+                );
+            }
+        }
+    };
+}
+
+/// Panics if the first expression is not equal than the second.
+///
+/// Requires that the values implement [`Debug`](core::fmt::Debug) and
+/// [`PartialEq`](core::cmp::PartialEq).
+///
+/// On failure, panics and prints the values out in a manner similar to
+/// prelude's [`assert_eq!`](core::assert_eq).
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_asserts as ta;
+///
+/// ta::assert_eq!(4 - 1, 3);
+/// ta::assert_eq!(4 - 1, 3, "With a message");
+/// ta::assert_eq!(4 - 1, 3, "With a formatted message: {}", "oh no");
+/// ```
+#[macro_export]
+macro_rules! assert_eq {
+    ($left:expr, $right:expr) => {
+        match (&$left, &$right) {
+            (left, right) => if !(left == right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left = right");
+                $crate::__private::assert_failed_nomsg(
+                    left, right, $crate::__private::AssertType::Eq,
+                );
+            }
+        }
+    };
+    ($left:expr, $right:expr, ) => {
+        $crate::assert_eq!($left, $right)
+    };
+    ($left:expr, $right:expr, $($msg_args:tt)+) => {
+        match (&$left, &$right) {
+            (left, right) => if !(left == right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left = right");
+                $crate::__private::assert_failed_msg(
+                    left, right, $crate::__private::AssertType::Eq,
+                    $crate::__core::format_args!($($msg_args)+),
+                );
+            }
+        }
+    };
+}
+
+/// Panics if the first expression is equal than the second.
+///
+/// Requires that the values implement [`Debug`](core::fmt::Debug) and
+/// [`PartialEq`](core::cmp::PartialEq).
+///
+/// On failure, panics and prints the values out in a manner similar to
+/// prelude's [`assert_ne!`](core::assert_ne).
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_asserts as ta;
+///
+/// ta::assert_ne!(4, 3);
+/// ta::assert_ne!(4, 3, "With a message");
+/// ta::assert_ne!(4, 3, "With a formatted message: {}", "oh no");
+/// ```
+#[macro_export]
+macro_rules! assert_ne {
+    ($left:expr, $right:expr) => {
+        match (&$left, &$right) {
+            (left, right) => if !(left != right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left != right");
+                $crate::__private::assert_failed_nomsg(
+                    left, right, $crate::__private::AssertType::Ne,
+                );
+            }
+        }
+    };
+    ($left:expr, $right:expr, ) => {
+        $crate::assert_ne!($left, $right)
+    };
+    ($left:expr, $right:expr, $($msg_args:tt)+) => {
+        match (&$left, &$right) {
+            (left, right) => if !(left != right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left != right");
+                $crate::__private::assert_failed_msg(
+                    left, right, $crate::__private::AssertType::Ne,
                     $crate::__core::format_args!($($msg_args)+),
                 );
             }
@@ -190,18 +293,19 @@ macro_rules! assert_gt {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
-/// ma::assert_le!(4, 4);
-/// ma::assert_le!(4, 5);
-/// ma::assert_le!(4, 5, "With a message");
-/// ma::assert_le!(4, 4, "With a formatted message: {}", "oh no");
+/// ta::assert_le!(4, 4);
+/// ta::assert_le!(4, 5);
+/// ta::assert_le!(4, 5, "With a message");
+/// ta::assert_le!(4, 4, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! assert_le {
     ($left:expr, $right:expr) => {
         match (&$left, &$right) {
             (left, right) => if !(left <= right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left <= right");
                 $crate::__private::assert_failed_nomsg(
                     left, right, $crate::__private::AssertType::Le,
                 );
@@ -214,6 +318,7 @@ macro_rules! assert_le {
     ($left:expr, $right:expr, $($msg_args:tt)+) => {
         match (&$left, &$right) {
             (left, right) => if !(left <= right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left <= right");
                 $crate::__private::assert_failed_msg(
                     left, right, $crate::__private::AssertType::Le,
                     $crate::__core::format_args!($($msg_args)+),
@@ -237,18 +342,19 @@ macro_rules! assert_le {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
-/// ma::assert_ge!(4, 4);
-/// ma::assert_ge!(4, 3);
-/// ma::assert_ge!(4, 3, "With a message");
-/// ma::assert_ge!(4, 4, "With a formatted message: {}", "oh no");
+/// ta::assert_ge!(4, 4);
+/// ta::assert_ge!(4, 3);
+/// ta::assert_ge!(4, 3, "With a message");
+/// ta::assert_ge!(4, 4, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! assert_ge {
     ($left:expr, $right:expr) => {
         match (&$left, &$right) {
             (left, right) => if !(left >= right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left >= right");
                 $crate::__private::assert_failed_nomsg(
                     left, right, $crate::__private::AssertType::Ge,
                 );
@@ -261,6 +367,7 @@ macro_rules! assert_ge {
     ($left:expr, $right:expr, $($msg_args:tt)+) => {
         match (&$left, &$right) {
             (left, right) => if !(left >= right) {
+                $crate::__tracing_error!(?left, ?right, "assertion failed: left >= right");
                 $crate::__private::assert_failed_msg(
                     left, right, $crate::__private::AssertType::Ge,
                     $crate::__core::format_args!($($msg_args)+),
@@ -276,12 +383,12 @@ macro_rules! assert_ge {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
 /// // These are compiled to nothing if debug_assertions are off!
-/// ma::debug_assert_lt!(3, 4);
-/// ma::debug_assert_lt!(3, 4, "With a message");
-/// ma::debug_assert_lt!(3, 4, "With a formatted message: {}", "oh no");
+/// ta::debug_assert_lt!(3, 4);
+/// ta::debug_assert_lt!(3, 4, "With a message");
+/// ta::debug_assert_lt!(3, 4, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! debug_assert_lt {
@@ -298,12 +405,12 @@ macro_rules! debug_assert_lt {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
 /// // These are compiled to nothing if debug_assertions are off!
-/// ma::debug_assert_gt!(5, 3);
-/// ma::debug_assert_gt!(5, 3, "With a message");
-/// ma::debug_assert_gt!(5, 3, "With a formatted message: {}", "oh no");
+/// ta::debug_assert_gt!(5, 3);
+/// ta::debug_assert_gt!(5, 3, "With a message");
+/// ta::debug_assert_gt!(5, 3, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! debug_assert_gt {
@@ -320,13 +427,13 @@ macro_rules! debug_assert_gt {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
 /// // These are compiled to nothing if debug_assertions are off!
-/// ma::debug_assert_le!(4, 4);
-/// ma::debug_assert_le!(4, 5);
-/// ma::debug_assert_le!(4, 5, "With a message");
-/// ma::debug_assert_le!(4, 4, "With a formatted message: {}", "oh no");
+/// ta::debug_assert_le!(4, 4);
+/// ta::debug_assert_le!(4, 5);
+/// ta::debug_assert_le!(4, 5, "With a message");
+/// ta::debug_assert_le!(4, 4, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! debug_assert_le {
@@ -343,19 +450,63 @@ macro_rules! debug_assert_le {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
 /// // These are compiled to nothing if debug_assertions are off!
-/// ma::debug_assert_ge!(4, 4);
-/// ma::debug_assert_ge!(4, 3);
-/// ma::debug_assert_ge!(4, 3, "With a message");
-/// ma::debug_assert_ge!(4, 4, "With a formatted message: {}", "oh no");
+/// ta::debug_assert_ge!(4, 4);
+/// ta::debug_assert_ge!(4, 3);
+/// ta::debug_assert_ge!(4, 3, "With a message");
+/// ta::debug_assert_ge!(4, 4, "With a formatted message: {}", "oh no");
 /// ```
 #[macro_export]
 macro_rules! debug_assert_ge {
     ($($arg:tt)+) => {
         if $crate::__core::cfg!(debug_assertions) {
             $crate::assert_ge!($($arg)+);
+        }
+    };
+}
+
+/// Same as [`assert_eq!`] in builds with debug assertions enabled, and a no-op
+/// otherwise.
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_asserts as ta;
+///
+/// // These are compiled to nothing if debug_assertions are off!
+/// ta::debug_assert_eq!(4, 4);
+/// ta::debug_assert_eq!(4, 4, "With a message");
+/// ta::debug_assert_eq!(4, 4, "With a formatted message: {}", "oh no");
+/// ```
+#[macro_export]
+macro_rules! debug_assert_eq {
+    ($($arg:tt)+) => {
+        if $crate::__core::cfg!(debug_assertions) {
+            $crate::assert_eq!($($arg)+);
+        }
+    };
+}
+
+/// Same as [`assert_ne!`] in builds with debug assertions enabled, and a no-op
+/// otherwise.
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_asserts as ta;
+///
+/// // These are compiled to nothing if debug_assertions are off!
+/// ta::debug_assert_ne!(4, 5);
+/// ta::debug_assert_ne!(4, 5, "With a message");
+/// ta::debug_assert_ne!(4, 5, "With a formatted message: {}", "oh no");
+/// ```
+#[macro_export]
+macro_rules! debug_assert_ne {
+    ($($arg:tt)+) => {
+        if $crate::__core::cfg!(debug_assertions) {
+            $crate::assert_ne!($($arg)+);
         }
     };
 }
@@ -369,11 +520,11 @@ macro_rules! debug_assert_ge {
 /// # Example
 ///
 /// ```rust
-/// use more_asserts as ma;
+/// use tracing_asserts as ta;
 ///
 /// let mut value = 0.5;
 /// if value < 0.0 {
-///     ma::debug_unreachable!("Value out of range {}", value);
+///     ta::debug_unreachable!("Value out of range {}", value);
 ///     value = 0.0;
 /// }
 /// ```
@@ -381,6 +532,7 @@ macro_rules! debug_assert_ge {
 macro_rules! debug_unreachable {
     ($($arg:tt)*) => {
         if $crate::__core::cfg!(debug_assertions) {
+            $crate::__tracing_error!($($arg)*);
             $crate::__core::unreachable!($($arg)*);
         }
     };

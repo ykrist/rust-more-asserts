@@ -1,31 +1,31 @@
-# [More Asserts](https://crates.io/crates/more-asserts) (for Rust).
+# [Tracing Asserts](https://crates.io/crates/tracing-asserts) (for Rust).
 
-[![Docs](https://docs.rs/more-asserts/badge.svg)](https://docs.rs/more-asserts)
-[![Latest Version](https://img.shields.io/crates/v/arcstr.svg)](https://crates.io/crates/more-asserts)
-![Minimum Rust Version](https://img.shields.io/badge/MSRV%201.46.0-blue.svg)
+Small library providing assertion macros which emit [`tracing`](https://docs.rs/tracing) events at the error level.
 
-Small library providing assertion macros similar to the `{debug_,}assert_{eq,ne}` macros in the stdlib.
+Forked from the [`more_asserts`](https://docs.rs/more_asserts) crate.
 
 ## Usage
 
 ```rust
-use more_asserts as ma;
+use tracing_asserts as ta;
 
 #[derive(Debug, PartialEq, PartialOrd)]
 enum Example { Foo, Bar }
 
-ma::assert_le!(3, 4);
-ma::assert_ge!(
+ta::assert_le!(3, 4);
+ta::assert_eq!(3, 2 + 1);
+ta::assert_ne!(3, 2 - 1);
+ta::assert_ge!(
     10, 10,
     "You can pass a message too (just like `assert_eq!`)",
 );
-ma::debug_assert_lt!(
+ta::debug_assert_lt!(
     1.3, 4.5,
     "Format syntax is supported ({}).",
     "also like `assert_eq!`"
 );
 
-ma::assert_gt!(
+ta::assert_gt!(
     Example::Bar, Example::Foo,
     "It works on anything that implements PartialOrd and Debug!",
 );
