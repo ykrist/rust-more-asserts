@@ -419,15 +419,15 @@ macro_rules! assert {
 /// ```
 #[macro_export]
 macro_rules! unreachable {
-    () =>  {
+    () =>  {{
         $crate::__tracing_error!("entered unreachable code");
         $crate::__core::unreachable!();
-    };
+    }};
 
-    ($($arg:tt)+) => {
+    ($($arg:tt)+) => {{
         $crate::__tracing_error!($($arg)*);
         $crate::__core::unreachable!($($arg)*);
-    };
+    }};
 }
 
 /// Same as [`assert_lt!`] in builds with debug assertions enabled, and a no-op

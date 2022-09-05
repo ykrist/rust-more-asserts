@@ -151,13 +151,13 @@ fn test_assert_ne() {
 #[test]
 #[should_panic]
 fn test_unreachable() {
-    ta::unreachable!();
+    ta::unreachable!()
 }
 
 #[test]
 #[should_panic]
 fn test_assert_fail() {
-    ta::assert!({ !true });
+    ta::assert!({ !true })
 }
 
 #[test]
