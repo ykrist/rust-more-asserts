@@ -1,6 +1,6 @@
 [package]
 name = "tracing-asserts"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Thom Chiovoloni <chiovolonit@gmail.com>", "ykrist"]
 description = "A fork from `more_asserts` which emits `tracing` events."
 keywords = ["assert", "debug_assert", "debug", "assertions", "testing", "tracinig"]

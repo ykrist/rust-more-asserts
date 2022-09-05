@@ -377,6 +377,59 @@ macro_rules! assert_ge {
     };
 }
 
+/// Panics if supplied expression is `false`.
+///
+/// This is a variant of the standard library's [`assert!`] macro.
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_asserts as ta;
+///
+/// ta::assert!(true, "foo {}", "bar")
+/// ```
+#[macro_export]
+macro_rules! assert {
+    ($cond:expr $(,)?) => {{
+        $crate::assert!($cond, "assertion failed: {}", stringify!($cond));
+    }};
+    ($cond:expr, $msg:literal $($arg:tt)*) => {{
+        let ok = $cond;
+        if !ok {
+            $crate::__tracing_error!($msg $($arg)*);
+            assert!(false, $msg $($arg)*);
+        }
+     }};
+}
+
+/// Panics if reached.
+///
+/// This is the equivalent of the standard library's [`unreachable!`] macro.
+///
+/// # Example
+///
+/// ```rust
+/// use tracing_asserts as ta;
+///
+/// let mut value = 0.5;
+/// if value < 0.0 {
+///     ta::unreachable!("Value out of range {}", value);
+///     value = 0.0;
+/// }
+/// ```
+#[macro_export]
+macro_rules! unreachable {
+    () =>  {
+        $crate::__tracing_error!("entered unreachable code");
+        $crate::__core::unreachable!();
+    };
+
+    ($($arg:tt)+) => {
+        $crate::__tracing_error!($($arg)*);
+        $crate::__core::unreachable!($($arg)*);
+    };
+}
+
 /// Same as [`assert_lt!`] in builds with debug assertions enabled, and a no-op
 /// otherwise.
 ///
@@ -532,8 +585,28 @@ macro_rules! debug_assert_ne {
 macro_rules! debug_unreachable {
     ($($arg:tt)*) => {
         if $crate::__core::cfg!(debug_assertions) {
-            $crate::__tracing_error!($($arg)*);
-            $crate::__core::unreachable!($($arg)*);
+            $crate::unreachable!($($arg)*);
+        }
+    };
+}
+
+/// Panics if supplied expression is `false` and `debug_assertions` are enabled.
+///
+/// This is a variant of the standard library's [`debug_assert!`] macro.
+///
+/// ```rust
+/// use tracing_asserts as ta;
+///
+/// // These are compiled to nothing if debug_assertions are off!
+/// ta::debug_assert!(true);
+/// ta::debug_assert!(!false, "With a message");
+/// ta::debug_assert!({ !false }, "With a formatted message: {}", "oh no");
+/// ```
+#[macro_export]
+macro_rules! debug_assert {
+    ($($arg:tt)*) => {
+        if $crate::__core::cfg!(debug_assertions) {
+            $crate::assert!($($arg)*);
         }
     };
 }

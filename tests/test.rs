@@ -147,3 +147,22 @@ fn test_assert_ne() {
     assert!(catch_unwind(|| ta::assert_ne!(3, 3)).is_err());
     assert!(catch_unwind(|| ta::assert_ne!(DummyType::Foo, DummyType::Foo)).is_err());
 }
+
+#[test]
+#[should_panic]
+fn test_unreachable() {
+    ta::unreachable!();
+}
+
+#[test]
+#[should_panic]
+fn test_assert_fail() {
+    ta::assert!({ !true });
+}
+
+#[test]
+fn test_assert() {
+    ta::assert!(true, "help");
+    ta::assert!(true, "help");
+    ta::assert!(true, "help {}", "me");
+}
